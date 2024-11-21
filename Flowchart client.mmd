@@ -1,0 +1,58 @@
+flowchart TD
+    %% Main Program Flow
+    A([Mulai]) --> B["Buat ServerSelectionDialog"]
+    B --> C{"Server Info\nKosong?"}
+    C -->|Tidak| D["HOST, PORT ← server_info"]
+    C -->|Ya| E([Selesai])
+    D --> F{"Koneksi\nBerhasil?"}
+    F -->|Tidak| G[/"Error: Could not\nconnect to HOST:PORT"/] --> E
+    F -->|Ya| H["Buat Client Baru"] --> I
+
+    %% Client Class
+    subgraph Client
+        I>"Client.init(host, port)"] --> J["prompt_nickname()"]
+        J --> K["show_loading_screen()"]
+        K --> L["connect_to_server()"]
+        L --> M["start_receive_thread()"]
+        M --> N["start_gui()"]
+        
+        %% GUI Thread
+        subgraph GUI_Thread["GUI Thread"]
+            O["create_main_window()"] --> P["create_chat_area()"]
+            P --> Q["create_input_area()"]
+            Q --> R["create_buttons()"]
+            R --> S["setup_event_handlers()"]
+        end
+
+        %% Receive Thread
+        subgraph Receive_Thread["Receive Thread"]
+            T{"running?"}
+            T -->|Ya| U["message ← receive_from_server()"]
+            U --> V{"Message\nKosong?"}
+            V -->|Tidak| W["process_received_message()"]
+            W --> T
+            V -->|Ya| T
+            T -->|Tidak| X["Exit Thread"]
+        end
+    end
+
+    %% Message Handling
+    subgraph Message_Handling["Message Handling"]
+        Z>"handle_message(message)"] --> AA{"Tipe\nPesan?"}
+        AA -->|"FILE:"| AB["handle_file_transfer()"]
+        AA -->|"Text"| AC["format_and_display_message()"]
+        AC --> AD["save_to_history()"]
+    end
+
+    %% Styling
+    classDef start_end fill:#f96,stroke:#333
+    classDef process fill:#fff,stroke:#333
+    classDef io fill:#87cefa,stroke:#333
+    classDef condition fill:#FFD700,stroke:#333
+    classDef subprogram fill:#FFCFCF,stroke:#333
+    
+    class A,E start_end
+    class B,D,H,J,K,L,M,N process
+    class G io
+    class C,F,T,V,AA condition
+    class I,Z subprogram

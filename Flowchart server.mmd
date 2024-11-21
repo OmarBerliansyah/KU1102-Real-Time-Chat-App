@@ -1,0 +1,55 @@
+flowchart TD
+    %% Main Program Flow
+    A([Mulai]) --> B>"init_server(host, port)"]
+    B --> C{"Server\nBerjalan?"}
+    C -->|Ya| D["accept_connection()"]
+    D --> E["create_thread(handle_client)"]
+    E --> C
+    C -->|Tidak| F([Selesai])
+
+    %% Handle Client Thread
+    subgraph Handle_Client["Handle Client"]
+        G>"handle_client(client, address)"] --> H[/"Kirim 'NICK'"/]
+        H --> I[/"Terima nickname"/]
+        I --> J["broadcast_join(nickname)"]
+        J --> K["add_client(client, nickname)"]
+        K --> L{"Client\nTerhubung?"}
+        L -->|Ya| M[/"Terima pesan"/]
+        M --> N{"Tipe\nPesan?"}
+        N -->|"FILE:"| O>"handle_file_transfer()"]
+        N -->|"Text"| P["broadcast(message)"]
+        P --> Q["log_message()"]
+        Q --> L
+        O --> L
+        L -->|Tidak| R["remove_client()"]
+    end
+
+    %% File Transfer Handling
+    subgraph File_Transfer["Handle File Transfer"]
+        S>"handle_file_transfer(sender, message)"] --> T["parse_header()"]
+        T --> U["create_temp_directory()"]
+        U --> V["save_temp_file()"]
+        V --> W["broadcast file"]
+        W --> X["delete_temp_file()"]
+    end
+
+    %% Init Server
+    subgraph Init_Server["Initialize Server"]
+        Y>"init_server(host, port)"] --> Z["create_socket()"]
+        Z --> AA["bind_socket()"]
+        AA --> AB["listen_socket()"]
+        AB --> AC["create_log_directory()"]
+    end
+
+    %% Styling
+    classDef start_end fill:#f96,stroke:#333
+    classDef process fill:#fff,stroke:#333
+    classDef io fill:#87cefa,stroke:#333
+    classDef condition fill:#FFD700,stroke:#333
+    classDef subprogram fill:#FFCFCF,stroke:#333
+    
+    class A,F start_end
+    class D,E,K,P,Q process
+    class H,I,M io
+    class C,L,N condition
+    class B,G,O,S,Y subprogram
